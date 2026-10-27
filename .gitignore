@@ -1,0 +1,55 @@
+# Environment secrets. Exceptions are for manually sanitized examples only.
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Local credentials; config/database.php stays as the environment-based template.
+/config/local.php
+/config/local.*
+/config/database.local.*
+/config/database.private.*
+/config/secrets.*
+
+# Private database exports and backups. Keep the evaluator's clean schema.
+*.sql
+*.sql.*
+*.dump
+*.dump.*
+*.sqlite
+*.sqlite3
+*.db
+/backups/
+/database/backups/
+/database/exports/
+!/database/schema.sql
+
+# Temporary output, logs, and backup copies.
+/tmp/
+/temp/
+/logs/
+*.log
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*~
+
+# Operating system and editor-generated files.
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*.sublime-workspace
+~$*
+
+# Redistribution permission not established: retain locally, omit from Git.
+/assets/images/ruhuna-logo.png.png
+/docs/Mini Project Evaluation Rubric - COM.pdf
