@@ -1,20 +1,27 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
+allow_methods(['GET','POST']);
+$user = require_login();
 $editing = isset($_GET['id']); $id = $editing ? item_id() : null;
 $data = $editing ? find_item($id) : array_fill_keys(['name','type','category_id','description','location','event_date','reporter_name','contact'], '');
+if ($editing) require_owner($data);
+$data['contact_visible'] = $editing ? $data['contact_visible'] : 0;
 // Homepage shortcuts preselect the form only; POST validation is unchanged.
 if (!$editing && $_SERVER['REQUEST_METHOD'] === 'GET' && in_array(input($_GET, 'type'), ['lost', 'found'], true)) $data['type'] = input($_GET, 'type');
 $categories = db()->query('SELECT * FROM categories ORDER BY name')->fetchAll(); $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf();
     [$data, $errors] = validate_item($_POST, array_column($categories, 'id'));
+    $data['contact_visible'] = input($_POST, 'contact_visible') === '1' ? 1 : 0;
     if (!$errors) {
         $values = array_map(fn($key) => $data[$key], ['category_id','name','type','description','location','event_date','reporter_name','contact']);
         if ($editing) {
-            $q = db()->prepare('UPDATE items SET category_id=?, name=?, type=?, description=?, location=?, event_date=?, reporter_name=?, contact=? WHERE id=?');
-            $values[] = $id; $q->execute($values);
+            $q = db()->prepare('UPDATE items SET category_id=?, name=?, type=?, description=?, location=?, event_date=?, reporter_name=?, contact=?, contact_visible=? WHERE id=? AND owner_id=?');
+            array_push($values, $data['contact_visible'], $id, $user['id']); $q->execute($values);
         } else {
-            $q = db()->prepare('INSERT INTO items (category_id,name,type,description,location,event_date,reporter_name,contact) VALUES (?,?,?,?,?,?,?,?)');
+            rate_limit('create-user', (string)$user['id'], 30, 3600);
+            $q = db()->prepare('INSERT INTO items (category_id,name,type,description,location,event_date,reporter_name,contact,contact_visible,owner_id) VALUES (?,?,?,?,?,?,?,?,?,?)');
+            array_push($values, $data['contact_visible'], $user['id']);
             $q->execute($values); $id = (int) db()->lastInsertId();
         }
         $_SESSION['flash'] = $editing ? 'Report updated.' : 'Report created.'; redirect('item.php?id=' . $id);
@@ -34,5 +41,5 @@ $title = $editing ? 'Edit report' : 'Report an item'; require __DIR__ . '/includ
 <?php elseif ($key === 'event_date'): ?><input<?= $attrs ?> type="date" min="1900-01-01" max="<?= date('Y-m-d') ?>" value="<?= e($data[$key]) ?>">
 <?php else: ?><input<?= $attrs ?> type="text" maxlength="<?= $max ?>" value="<?= e($data[$key]) ?>"><?php endif; ?>
 <?php if (isset($errors[$key])): ?><p class="field-error" id="<?= $key ?>-error"><?= e($errors[$key]) ?></p><?php endif; ?></div>
-<?php endforeach; ?><div class="form-bottom field-wide"><p>All fields except Description are required. Contact details are visible to anyone who opens the report&rsquo;s contact section.</p><div class="actions"><button><?= ui_icon($editing ? 'check' : 'plus') ?><?= $editing ? 'Save changes' : 'Create report' ?></button><a class="cancel-link" href="<?= $editing ? 'item.php?id=' . $id : 'index.php' ?>">Cancel</a></div></div></form></div><aside class="form-aside"><div class="aside-icon"><?= ui_icon('book') ?></div><h2>A helpful report starts with the details.</h2><p>Mention the item&rsquo;s colour, its distinguishing features, and where it was lost or found.</p><hr><h3><?= ui_icon('shield') ?> Share thoughtfully</h3><p>Use only contact information you are comfortable sharing publicly. Never include passwords, identity numbers, or other sensitive information.</p><p class="aside-note">This is a shared student project. Visitors can edit or delete reports.</p></aside></div>
+<?php endforeach; ?><div class="field-wide"><label class="checkbox-label"><input type="checkbox" name="contact_visible" value="1" <?= $data['contact_visible'] ? 'checked' : '' ?>> Allow signed-in users to request my reporter name and contact details for this item.</label><p class="small-note">Optional. Contact information stays private unless you choose to share it. Never include private contact details in the public description or title.</p></div><div class="form-bottom field-wide"><p>All report fields except Description are required. Contact sharing is optional.</p><div class="actions"><button><?= ui_icon($editing ? 'check' : 'plus') ?><?= $editing ? 'Save changes' : 'Create report' ?></button><a class="cancel-link" href="<?= $editing ? 'item.php?id=' . $id : 'index.php' ?>">Cancel</a></div></div></form></div><aside class="form-aside"><div class="aside-icon"><?= ui_icon('book') ?></div><h2>A helpful report starts with the details.</h2><p>Mention the item&rsquo;s colour, its distinguishing features, and where it was lost or found.</p><hr><h3><?= ui_icon('shield') ?> Share thoughtfully</h3><p>Only share contact information you are comfortable disclosing to other account holders. Never include passwords, identity numbers, or other sensitive information.</p><p class="aside-note">Only your account can edit or delete reports you create. Accounts do not verify university enrollment.</p></aside></div>
 <?php require __DIR__ . '/includes/footer.php'; ?>

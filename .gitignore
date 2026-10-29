@@ -23,6 +23,8 @@
 /database/backups/
 /database/exports/
 !/database/schema.sql
+!/database/migrations/
+!/database/migrations/*.sql
 
 # Temporary output, logs, and backup copies.
 /tmp/

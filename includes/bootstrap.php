@@ -2,9 +2,16 @@
 declare(strict_types=1);
 
 date_default_timezone_set('Asia/Colombo');
+$production = getenv('APP_ENV') === 'production';
+$https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+if ($production && PHP_SAPI !== 'cli' && !$https) { http_response_code(503); exit('HTTPS is required.'); }
 ini_set('session.use_strict_mode', '1');
-session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax', 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off']);
+ini_set('session.use_only_cookies', '1');
+session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax', 'secure' => $https]);
 session_start();
+header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
 header("Content-Security-Policy: default-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
@@ -58,3 +65,4 @@ set_exception_handler(function (Throwable $error): void {
     http_response_code(500);
     echo '<h1>Unable to complete this request</h1><p>Please try again later. If this continues, check the database setup.</p><a href="index.php">Return to reports</a>';
 });
+require_once __DIR__ . '/auth.php';

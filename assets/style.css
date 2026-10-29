@@ -22,3 +22,6 @@ main{max-width:1200px;margin:auto;padding:38px 28px 76px;min-height:65vh}main:fo
 .hero-footnote{max-width:760px;margin:30px 0 0;padding-top:20px;border-top:1px solid #daceb9;font-size:.75rem;line-height:1.7;color:#62555b}
 @media(max-width:760px){.hero{padding:40px 30px 32px}.hero-description{font-size:.94rem}.university-logo{width:46px}}
 @media(max-width:520px){.hero{padding:30px 22px}.hero .eyebrow{font-size:.65rem}.hero h1{font-size:2rem}.hero-description{font-size:.9rem}.hero-actions{align-items:stretch;flex-direction:column;gap:12px}.hero-actions .button{width:100%}.hero-footnote{font-size:.73rem;margin-top:24px}.university-logo{width:44px}}
+
+/* Account controls use the existing visual language. */
+.auth-form{display:grid;gap:22px}.auth-panel>p{color:var(--muted)}.checkbox-label{display:flex;align-items:flex-start;gap:12px}.checkbox-label input{width:18px;min-height:18px;height:18px;margin-top:5px;flex-shrink:0}.logout-form{margin:0}.logout-button{background:transparent;color:var(--maroon);border-radius:0;min-height:44px;padding:10px 0}.logout-button:hover{background:transparent;color:var(--maroon-dark);box-shadow:none}.nav-layout nav{flex-wrap:wrap;gap:20px}@media(max-width:520px){.nav-layout nav{gap:10px}}

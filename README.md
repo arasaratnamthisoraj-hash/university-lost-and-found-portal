@@ -1,13 +1,14 @@
 # University Lost and Found Portal
 
-Small PHP application for the EC4307 30-mark mini-project rubric. Item reports support persistent Create, Read (including details/search/filter/sort), Update and confirmed Delete operations.
+Small PHP application for the EC4307 30-mark mini-project rubric. Item reports support persistent Create, Read (including details/search/filter/sort), Update and confirmed Delete operations. Browsing is public; account ownership protects report management.
 
 ## Requirements and setup
 
 - Existing XAMPP with Apache, PHP 8.1+ (PDO MySQL and mbstring), and MySQL/MariaDB.
 - Keep this folder in `C:\xampp\htdocs\university-lost-and-found-portal`.
 - Start Apache and MySQL using the XAMPP control panel.
-- Import `database/schema.sql` with phpMyAdmin's Import tab or the MySQL client. It creates `university_lost_found`, its tables and six categories. Reimporting does not erase records.
+- For a **fresh database**, import `database/schema.sql` with phpMyAdmin's Import tab or the MySQL client. It creates `university_lost_found`, four tables and six categories. Reimporting this schema does not erase records, but does not upgrade an old installation.
+- For an **existing pre-account database**, back it up privately, select its database, and import `database/migrations/001_report_ownership.sql` **once** instead. The migration adds users, rate limits and ownership/privacy columns without deleting reports. DDL auto-commits; if an import fails partway, inspect the existing tables/columns before retrying. Do not reset or recreate the database.
 - Open <http://localhost/university-lost-and-found-portal/>.
 - `config/database.php` uses the local XAMPP defaults (127.0.0.1:3306, root, empty password). Environment variables `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` override them. Configure these in the Apache environment and restart Apache if needed. Use a dedicated database account for deployment; never commit credentials.
 
@@ -17,7 +18,22 @@ Apache must honor the project's `.htaccess` files. In the directory configuratio
 
 The supplied university logo (`assets/images/ruhuna-logo.png.png`) and assignment rubric PDF (`docs/Mini Project Evaluation Rubric - COM.pdf`) are retained locally but excluded from Git because redistribution permission has not been established. A fresh clone will not include them: obtain an authorized logo separately and place it at the documented path to reproduce the local header. The application references that local logo; no replacement asset is downloaded automatically. Obtain the rubric through the course's authorized channel. The schema remains included for evaluators.
 
-This is a shared local assessment application. No user accounts or ownership roles were specified: all visitors can edit/delete all reports, and reporter contact details are visible. Keep it local; public deployment requires an approved access policy and authentication/authorization implementation. No security settings are disabled by setup.
+Register an account at `register.php`, then sign in at `login.php` to create reports. Only that account can edit or delete its reports. Registration uses a unique username and password (at least 15 characters, at most 72 bytes). Accounts do not verify university enrollment. No default accounts, email verification, password recovery, or administrator web interface are provided; keep your credentials safe.
+
+The migration was applied to the existing local database on 28 October 2026. Its four reports were preserved and remain publicly viewable but locked (`owner_id IS NULL`), with contact sharing disabled. Do not rerun the migration on this installation. A private pre-migration backup is in `database/backups/before-ownership-2026-10-28.sql`; it is ignored by Git and blocked by the database directory's access rules. Do not publish backups.
+
+Legacy ownership must be assigned only by a trusted operator after independently verifying the creator and account. There is deliberately no public claim-by-name/contact feature. Assigning an owner must leave `contact_visible=0` unless the creator subsequently opts in through their own edit form. New reports receive their owner from the authenticated session, never a submitted owner field.
+
+Reporter names and contacts are absent from ordinary public HTML. Contact sharing is off by default. Owners can request their own details; other signed-in users can request them only after the owner enables sharing, through a CSRF-protected POST. Contact responses are non-cacheable. Sharing can be revoked in the edit form; previously disclosed information cannot be recalled. Do not include personal contact information in public titles or descriptions.
+
+## Public-hosting configuration
+
+- Use HTTPS and set `APP_ENV=production` in the actual PHP/Apache environment. Production mode refuses HTTP requests and disables displayed PHP errors. If TLS terminates at a proxy, configure HTTPS indication at the trusted server/proxy layer; the app does not trust arbitrary forwarded headers.
+- Set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` and `DB_PASSWORD` for the hosting environment. Production mode rejects missing credentials and the default administrative account. Use a restricted application account with SELECT/INSERT/UPDATE/DELETE on this database; migrations need a separate setup account with DDL privileges.
+- Keep session files, PHP logs and backups private, and verify Apache access rules (or equivalent rules on another server) before accepting traffic. Keep PHP/MariaDB patched and disable error display at the host configuration level too.
+- Session cookies are HttpOnly, SameSite=Lax and Secure on HTTPS. Sign-in/sign-out regenerate the session ID; authenticated sessions expire after 30 minutes of inactivity or 12 hours total. Responses use `Cache-Control: no-store`.
+- Persistent limits: registration 10 requests/hour per IP; login 60 requests/15 minutes per IP and 15 per username; report creation 30/hour per account; contact disclosure 20/hour per account. Excess requests return 429 with Retry-After. Expired buckets older than one day are cleaned during allowed requests. Behind a proxy, configure its trusted client-address handling correctly; the application uses REMOTE_ADDR.
+- Review privacy/retention arrangements and the limits of open self-registration before public hosting. Rate limits reduce abuse but cannot prevent all spam or copying by account holders. The portal remains an independent student project.
 
 ## Structure
 
@@ -25,20 +41,38 @@ This is a shared local assessment application. No user accounts or ownership rol
 - `item.php`: report details.
 - `item-form.php`: create/edit with shared validation.
 - `delete.php`: confirmation and POST-only deletion.
+- `register.php`, `login.php`, `logout.php`: account creation, sign-in and CSRF-protected POST sign-out.
+- `contact.php`: authenticated, consent-checked POST contact disclosure.
 - `includes/`: PDO connection, validation, session/CSRF, escaping and shared templates.
 - `config/`: environment-based connection settings.
 - `assets/`: responsive CSS and progressive JavaScript validation/confirmation.
 - `database/schema.sql`: non-destructive schema and category seed.
 - `tests/integration.php`: CLI HTTP/database integration checks.
+- `tests/schema.php`: isolated fresh-schema/migration compatibility checks.
+- `tests/configuration.php`: production database configuration checks without a connection.
 - `docs/`: official rubric and project design/testing notes.
 
 ## Database design
 
 `categories` has a unique name and unsigned integer primary key. `items` has an unsigned integer primary key, a mandatory category foreign key, bounded text fields, a lost/found enum, a DATE for the event and timestamps for creation/update. Category removal is restricted while referenced. Both tables use InnoDB and utf8mb4. Event date and report type are indexed. Search is a literal substring match; user-provided sorting is mapped to a fixed allowlist.
 
+`users` stores unique usernames and PHP password hashes, never plaintext passwords. `items.owner_id` is a nullable indexed foreign key with restricted user deletion; NULL represents locked legacy records. `items.contact_visible` defaults to 0. `rate_limits` stores hashed bucket identifiers, counters and expiry timestamps.
+
 ```mermaid
 erDiagram
     categories ||--o{ items : categorizes
+    users o|--o{ items : owns
+    users {
+        INT id PK
+        VARCHAR username UK
+        VARCHAR password_hash
+        TIMESTAMP created_at
+    }
+    rate_limits {
+        CHAR bucket_key PK
+        INT attempts
+        DATETIME expires_at
+    }
     categories {
         INT id PK
         VARCHAR name UK
@@ -53,6 +87,8 @@ erDiagram
         DATE event_date
         VARCHAR reporter_name
         VARCHAR contact
+        INT owner_id FK
+        BOOLEAN contact_visible
         TIMESTAMP created_at
         TIMESTAMP updated_at
     }
@@ -69,9 +105,13 @@ Run from the project folder with Apache and MariaDB running:
 ```powershell
 Get-ChildItem -Recurse -Filter *.php | ForEach-Object { & C:/xampp/php/php.exe -l $_.FullName }
 & C:/xampp/php/php.exe tests/integration.php
+& C:/xampp/php/php.exe tests/schema.php
+& C:/xampp/php/php.exe tests/configuration.php
 ```
 
-The integration suite uses HTTP requests through Apache and reads the actual MariaDB records independently. It creates uniquely named test reports, checks CRUD, search/filter/sort, invalid input, CSRF, output escaping, invalid IDs, protected paths and foreign keys, then removes only its own records. Do not run it against production. An optional first argument overrides the base URL.
+The integration suite uses HTTP requests through Apache and reads the actual MariaDB records independently. It creates uniquely named users/reports with separate cookie jars, checks account security, ownership, contact consent, CRUD, optional descriptions, search/filter/sort, validation, CSRF, escaping and protected paths, then removes its own accounts/reports and account-specific test buckets. IP rate-limit counters remain in place: repeated runs may receive 429 until the window expires. Do not disable production limits to run tests. An optional first argument overrides the base URL.
+
+Run these tests only on a local/development installation. The schema test needs CREATE/DROP DATABASE permission: it creates and removes only a randomly named `ulf_schema_test_*` database and compares it with the migrated application schema. It does not reset the application database. Configuration tests change only their own process environment and make no database connection.
 
 See `docs/testing.md` for execution results and outstanding manual checks.
 

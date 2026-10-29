@@ -1,8 +1,11 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
+allow_methods(['GET','POST']);
+require_login();
 $id = item_id(); $item = find_item($id);
+$user = require_owner($item);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    csrf(); $q = db()->prepare('DELETE FROM items WHERE id = ?'); $q->execute([$id]);
+    csrf(); $q = db()->prepare('DELETE FROM items WHERE id = ? AND owner_id = ?'); $q->execute([$id, $user['id']]);
     $_SESSION['flash'] = 'Report deleted.'; redirect('index.php');
 }
 $title = 'Delete report'; require __DIR__ . '/includes/header.php';
