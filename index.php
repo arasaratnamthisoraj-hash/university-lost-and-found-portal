@@ -21,13 +21,13 @@ require __DIR__ . '/includes/header.php';
 ?>
 <section class="hero" aria-labelledby="hero-title">
     <p class="eyebrow">For our campus community</p>
-    <h1 id="hero-title">University of Ruhuna Lost &amp; Found Portal</h1>
+    <h1 id="hero-title">University Lost &amp; Found Portal</h1>
     <p class="hero-description">Lost something on campus? We're here to help. Report missing belongings, browse found items, and help fellow students reconnect with what they've lost.</p>
     <div class="actions hero-actions">
         <a class="button" href="item-form.php?type=lost"><?= ui_icon('search') ?> Report Lost Item</a>
         <a class="button button-outline" href="item-form.php?type=found"><?= ui_icon('plus') ?> Report Found Item</a>
     </div>
-    <p class="hero-footnote">Independent student project &mdash; not an official university service or endorsed by the University of Ruhuna.</p>
+    <p class="hero-footnote project-disclaimer">Independent student project — not an official university service or endorsed by any university.</p>
 </section>
 <section class="how-strip" aria-label="How the portal works"><div><span class="step-number">01</span><p><strong>Look around</strong><span>Search campus reports</span></p></div><div><span class="step-number">02</span><p><strong>Share the details</strong><span>Report a lost or found item</span></p></div><div><span class="step-number">03</span><p><strong>Make a connection</strong><span>Contact the reporter directly</span></p></div></section>
 <section class="browse-section" aria-labelledby="reports-heading"><div class="section-heading"><div><p class="eyebrow">The campus noticeboard</p><h2 id="reports-heading">Find what matters.</h2></div><p>Browse lost and found reports from your community.</p></div>

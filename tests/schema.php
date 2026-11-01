@@ -19,7 +19,7 @@ try {
     $pdo->exec(str_replace('university_lost_found',$testDb,$sql));
     assert_schema((int)$pdo->query('SELECT COUNT(*) FROM categories')->fetchColumn()===6,'Fresh schema imports and reimports without duplicating categories');
     $names=$pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN); sort($names);
-    assert_schema($names===['categories','items','rate_limits','users'],'Fresh schema contains all four expected tables');
+    assert_schema($names===['categories','conversations','items','message_reads','messages','rate_limits','users'],'Fresh schema contains all seven expected tables');
     $pdo->exec("INSERT INTO items (category_id,name,type,description,location,event_date,reporter_name,contact) SELECT id,'Schema fixture','lost','','Campus','2026-01-01','Fixture','fixture@example.invalid' FROM categories LIMIT 1");
     $row=$pdo->query('SELECT owner_id,contact_visible,description FROM items')->fetch(PDO::FETCH_ASSOC);
     assert_schema($row['owner_id']===null && (int)$row['contact_visible']===0 && $row['description']==='','Fresh schema defaults are locked/private and accept empty description');

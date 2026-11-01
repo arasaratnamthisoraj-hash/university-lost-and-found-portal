@@ -2,11 +2,29 @@
 declare(strict_types=1);
 
 date_default_timezone_set('Asia/Colombo');
-$production = getenv('APP_ENV') === 'production';
-$https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
 ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
 ini_set('log_errors', '1');
-if ($production && PHP_SAPI !== 'cli' && !$https) { http_response_code(503); exit('HTTPS is required.'); }
+header_remove('X-Powered-By');
+// Install before loading private configuration; never expose credentials or traces.
+set_exception_handler(function (Throwable $error): void {
+    error_log('Portal request failed: ' . get_class($error) . ' code=' . $error->getCode());
+    http_response_code(500);
+    header('Cache-Control: no-store');
+    echo '<h1>Unable to complete this request</h1><p>Please try again later. If this continues, check the database setup.</p><a href="index.php">Return to reports</a>';
+});
+require_once __DIR__ . '/../config/settings.php';
+$runtime = portal_settings();
+$production = $runtime['production'];
+$https = portal_is_https($_SERVER);
+if ($production && PHP_SAPI !== 'cli' && !$https) {
+    $uri = $_SERVER['REQUEST_URI'] ?? '/';
+    if ($runtime['canonical_origin'] !== '' && in_array($_SERVER['REQUEST_METHOD'], ['GET','HEAD'], true)
+        && str_starts_with($uri, '/') && !preg_match('/[\x00-\x20\x7f]/', $uri)) {
+        header('Location: ' . $runtime['canonical_origin'] . $uri, true, 302); exit;
+    }
+    http_response_code(426); header('Cache-Control: no-store'); exit('HTTPS is required.');
+}
 ini_set('session.use_strict_mode', '1');
 ini_set('session.use_only_cookies', '1');
 session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax', 'secure' => $https]);
@@ -60,9 +78,4 @@ function validate_item(array $source, array $categoryIds): array {
     if (!$date || $date->format('Y-m-d') !== $data['event_date'] || $data['event_date'] > date('Y-m-d') || $data['event_date'] < '1900-01-01') $errors['event_date'] = 'Enter a valid date between 1900-01-01 and today.';
     return [$data, $errors];
 }
-set_exception_handler(function (Throwable $error): void {
-    error_log((string) $error);
-    http_response_code(500);
-    echo '<h1>Unable to complete this request</h1><p>Please try again later. If this continues, check the database setup.</p><a href="index.php">Return to reports</a>';
-});
 require_once __DIR__ . '/auth.php';

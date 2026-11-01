@@ -2,7 +2,7 @@
 require __DIR__ . '/includes/bootstrap.php';
 allow_methods(['POST']); $user = require_login(); csrf();
 $item = find_item(item_id());
-if (!owns_item($item) && !(bool)$item['contact_visible']) fail(403, 'Contact information is private.');
+if (!owns_item($item)) fail(403, 'Contact information is private.');
 rate_limit('contact-user', (string)$user['id'], 20, 3600);
 $title = 'Reporter contact'; require __DIR__ . '/includes/header.php';
 ?>

@@ -7,6 +7,7 @@
 # Local credentials; config/database.php stays as the environment-based template.
 /config/local.php
 /config/local.*
+!/config/local.example.php
 /config/database.local.*
 /config/database.private.*
 /config/secrets.*
@@ -25,11 +26,15 @@
 !/database/schema.sql
 !/database/migrations/
 !/database/migrations/*.sql
+!/deployment/infinityfree/schema.sql
 
 # Temporary output, logs, and backup copies.
 /tmp/
 /temp/
 /logs/
+/build/
+/config/deployment.php
+*.zip
 *.log
 *.tmp
 *.temp
@@ -55,3 +60,9 @@ $RECYCLE.BIN/
 # Redistribution permission not established: retain locally, omit from Git.
 /assets/images/ruhuna-logo.png.png
 /docs/Mini Project Evaluation Rubric - COM.pdf
+
+# Installer files should not be uploaded.
+/config/*.exe
+
+# Private hosting configuration.
+/config/settings.php

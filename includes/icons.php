@@ -2,6 +2,8 @@
 // Decorative interface icons, not university insignia. Fixed paths only.
 function ui_icon(string $name): string {
     $paths = [
+        // Original tag-and-magnifier project mark; no institutional symbols.
+        'lost-found' => '<path d="M3 3h8l7 7-8 8-7-7Z"/><circle cx="7" cy="7" r="1.2"/><circle cx="16" cy="15" r="4"/><path d="m19 18 3 3"/>',
         'search' => '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/>',
         'plus' => '<path d="M12 5v14M5 12h14"/>',
         'arrow' => '<path d="M5 12h14m-6-6 6 6-6 6"/>',

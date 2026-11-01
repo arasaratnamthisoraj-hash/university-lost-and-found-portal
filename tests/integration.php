@@ -98,14 +98,14 @@ try {
     check($status === 200 && str_contains($body,$data['contact']) && ($headers['cache-control'] ?? '') === 'no-store', 'Owner may request own contact with no-store response');
     [$status] = request('contact.php?id=' . $id); check($status === 405, 'Contact disclosure rejects GET');
     [$status] = request('contact.php?id=' . $id,['csrf'=>'wrong']); check($status === 403, 'Contact disclosure requires CSRF');
-    [$status] = request('item-form.php?id=' . $id,array_replace($data,['contact_visible'=>'1','owner_id'=>$otherId])); check($status === 303, 'Owner may opt in to contact sharing');
+    [$status] = request('item-form.php?id=' . $id,array_replace($data,['contact_visible'=>'1','owner_id'=>$otherId])); check($status === 303, 'Legacy sharing field does not prevent report update');
     $q = $pdo->prepare('SELECT owner_id FROM items WHERE id=?'); $q->execute([$id]); check((int)$q->fetchColumn() === $ownerId, 'Forged owner field cannot transfer ownership');
     $cookie = $otherCookie;
     [$status, $body] = request('item.php?id=' . $id); check($status === 200 && !str_contains($body,$data['contact']), 'Opted-in contact is absent from ordinary detail HTML');
-    [$status, $body] = request('contact.php?id=' . $id,['csrf'=>$otherToken]); check($status === 200 && str_contains($body,$data['contact']), 'Signed-in user may request opted-in contact');
+    [$status, $body] = request('contact.php?id=' . $id,['csrf'=>$otherToken]); check($status === 403 && !str_contains($body,$data['contact']), 'Contact remains private even when the legacy sharing flag is set');
     $cookie = $guestCookie; [$status, $body] = request('item.php?id=' . $id); check($status === 200 && !str_contains($body,$data['contact']), 'Opted-in contact is still absent from anonymous HTML');
     $cookie = $ownerCookie;
-    [$status] = request('item-form.php?id=' . $id,$data); check($status === 303, 'Owner may revoke sharing');
+    [$status] = request('item-form.php?id=' . $id,$data); check($status === 303, 'Report update remains functional with private contacts');
     $cookie = $otherCookie; [$status] = request('contact.php?id=' . $id,['csrf'=>$otherToken]); check($status === 403, 'Revoked sharing takes effect on next request');
     // A synthetic legacy fixture avoids altering the user's real legacy reports.
     $legacyName = $prefix . ' legacy';
@@ -171,11 +171,12 @@ try {
     }
     // Fixed-window throttling is exercised using this test's unique user bucket.
     $cookie=$otherCookie;
-    $bucketKey=hash('sha256','contact-user:'.$otherId);
+    $bucketKey=hash('sha256','contact-user:'.$ownerId);
     $q=$pdo->prepare('INSERT INTO rate_limits (bucket_key,attempts,expires_at) VALUES (?,20,DATE_ADD(UTC_TIMESTAMP(), INTERVAL 1 HOUR)) ON DUPLICATE KEY UPDATE attempts=20,expires_at=VALUES(expires_at)'); $q->execute([$bucketKey]);
     // The second report belongs to owner A; opt in so the request reaches the limiter.
-    $cookie=$ownerCookie; [$status]=request('item-form.php?id='.$id2,array_replace($second,['contact_visible'=>'1'])); check($status===303,'Owner can enable sharing for rate-limit test');
-    $cookie=$otherCookie; [$status,$body,$headers]=request('contact.php?id='.$id2,['csrf'=>$otherToken]); check($status===429 && isset($headers['retry-after']),'Contact requests are persistently rate limited');
+    $cookie=$ownerCookie; [$status]=request('item-form.php?id='.$id2,array_replace($second,['contact_visible'=>'1'])); check($status===303,'Owner can update report before contact rate-limit test');
+    $cookie=$ownerCookie; [$status,$body,$headers]=request('contact.php?id='.$id2,['csrf'=>$token]); check($status===429 && isset($headers['retry-after']),'Contact requests are persistently rate limited');
+    $cookie=$otherCookie;
     [$status]=request('logout.php'); check($status===405,'Logout rejects GET');
     [$status]=request('logout.php',['csrf'=>'bad']); check($status===403,'Logout requires CSRF');
     [$status]=request('logout.php',['csrf'=>$otherToken]); check($status===303,'Valid logout succeeds');

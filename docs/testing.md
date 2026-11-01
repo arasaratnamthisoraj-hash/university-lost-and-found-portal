@@ -1,4 +1,42 @@
-# Development verification — updated 28 October 2026
+# Unread notifications verification — 31 October 2026
+
+All 45 non-private source and generated-package PHP syntax checks pass. The separate 24-file unread deployment package matches current runtime source and contains no private local configuration.
+
+The isolated XAMPP Apache/MariaDB run passes 56 messaging checks (including 21 new unread checks), 116 CRUD/authentication checks, 21 branding checks, 5 schema checks, 16 configuration checks and 9 packaging checks. Two migration checks verify additive migration/reimport preservation, including existing message contents. Real application databases and private configuration were not used. The temporary database/runtime copy was removed. Hosted behavior and visual mobile checks remain manual. Run `C:/xampp/php/php.exe tests/run-isolated.php`. These results supersede the earlier counts below.
+
+# Private messaging verification — 31 October 2026
+
+The isolated XAMPP Apache/MariaDB runner passes 35 messaging checks, 116 existing CRUD/authentication integration checks, 21 branding checks, 5 schema checks, 16 configuration checks, and 9 packaging checks. An additional check verifies that importing and reimporting the additive messaging migration preserves seeded reports/accounts exactly. All 45 non-private source/package PHP syntax checks pass. Real application databases and private configuration are not used. Scratch databases and copied files are removed.
+
+Run `C:/xampp/php/php.exe tests/run-isolated.php`. Messaging tests include anonymous and third-party forged requests, self-send denial, forged recipients, CSRF, input limits, escaped SQL/XSS payloads, contact privacy, replies, repeat conversations, rate limiting and history after report deletion. Production migration/hosting and visual responsive checks remain manual. These results supersede older contact-sharing behavior and package counts below.
+
+# Development verification — updated 30 October 2026
+
+## Independent student-project branding update
+
+The official crest was removed from all rendered shared headers and deployment builds. An original inline SVG project mark is used instead. The academic project title is retained, while the header and titles explicitly identify an independent student project. Homepage/login/registration main content contains the requested exact disclaimer; authentication copy describes this portal's own accounts. No credential, hosting, schema, authorization or CRUD logic was changed.
+
+- **116 existing integration checks passed** in an isolated local database/copy, excluding all private local configuration.
+- **5 schema**, **16 configuration**, **9 deployment** and **21 HTTP/DOM branding checks passed**. The branding checks cover homepage, login and registration, including titles, the visible header label, SVG mark, exact disclaimer, no crest image and no institutional links in shared branding.
+- **21 non-private source PHP files** and **16 generated PHP files** passed syntax checks. Private configuration and local configuration templates were not executed or printed during these checks.
+- The clean build has **21 runtime files**, no official logo and no private configuration. A former generated logo is removed by the builder only at its known obsolete artifact path; the unused source asset remains local and ignored by Git.
+- All 12 recorded credential/security/CRUD/schema/hosting file checksums matched after the changes, including `config/local.php`. Existing local database records and ID sequences also matched the pre-test checksum. No real report was used for mutation tests; the isolated database and test copy were removed.
+
+Manual verification remains: desktop/mobile visual appearance, the actual deployed files after manual upload, Search Console sample URLs and any misleading/injected content or redirects. Google’s security issue has not been verified resolved. No upload, Git push or Search Console review request was performed.
+
+## InfinityFree preparation — 30 October 2026
+
+Configuration and packaging were prepared locally only. No remote upload, remote MySQL connection, Git commit, push, or deployment was performed. Production uses a protected private PHP config and a non-secret forced-production marker; local XAMPP defaults remain supported. See `docs/infinityfree-deployment.md` for FileZilla instructions and hosting-specific verification gates.
+
+- **116 existing integration checks passed** through XAMPP Apache against an isolated fresh test database and local-only application copy. This includes authentication, server ownership, private contacts, CSRF, SQL injection-shaped inputs, output escaping, CRUD, optional Description and search/filter/sort.
+- **5 schema checks passed**; neither existing local schema nor original records were altered.
+- **16 configuration checks passed**, including private-file settings without environment variables, local defaults, override precedence, forced production, missing/empty/administrative credential rejection, DSN input validation and forwarded-header rejection.
+- **8 deployment checks passed**, covering the exact 22-file runtime allowlist, exclusions, production marker, credential-free fail-closed behaviour, config protections, unchanged logo and refusal to rebuild over an unexpected private config.
+- **10 local HTTP deployment checks passed**, covering fixed-host HTTPS redirection, forwarded-header spoofing, HTTP POST rejection before session creation, production/error settings, Secure/HttpOnly/SameSite cookies with simulated trusted TLS metadata, generic failure without credentials and denial of direct config/include access (including a disposable canary config file).
+- **21 source PHP files and all 16 generated runtime PHP files passed syntax checks**.
+- Original report/user/category/rate-limit data and ID sequences matched the pre-test checksum. The isolated test database and copy were removed. No real reports were used for mutation tests.
+
+The cookie test is an application-level TLS-metadata simulation, not an actual InfinityFree certificate test. Remote PHP/extensions, native HTTPS indication, valid SSL, private config denial, startup-level error reporting, FTPS and the existing remote database state remain manual deployment gates. No diagnostic endpoint or test script is included in the upload folder.
 
 ## Current ownership/privacy verification — 28 October 2026
 

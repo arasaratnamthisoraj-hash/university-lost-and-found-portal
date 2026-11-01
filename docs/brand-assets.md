@@ -1,21 +1,15 @@
-# Frontend assets
+# Independent project identity
 
-The header uses the user-supplied `assets/images/ruhuna-logo.png.png` at its original aspect ratio. The supplied file is unchanged. Its presence identifies the university context, not university endorsement. The utility bar, hero and footer identify the portal as an independent student project.
+The website uses an original tag-and-magnifier SVG mark defined in `includes/icons.php`. It is a generic Lost & Found project icon, with no university crest, seal, motto or institutional symbol. It is used by the shared header across all pages. The existing burgundy/cream/gold styling remains a project design choice, not an official identity specification.
 
-No campus photograph was supplied in the project, so the homepage uses the explicitly requested typography-based fallback. No generated or downloaded campus image is used. Before adding a photograph, supply a genuine University of Ruhuna campus image and confirm permission to use it here (including any attribution requirements). Merely being published on a university website is not proof of reuse permission.
+The academic title remains “University of Ruhuna Lost & Found Portal.” The header prominently states “Independent Student Project.” The homepage, login page and registration page display: “Independent student project — not an official university service or endorsed by the University of Ruhuna.” Page titles and footer also identify the independent project. University links have been removed from the shared branding. Authentication copy refers to accounts created for this portal, not university accounts or enrollment verification.
 
-The burgundy, gold, cream and white palette is a student-project design choice, not a claim about official university colour specifications.
+## Retired assets and deployment
 
-## Public repository exclusions
+The local, Git-ignored `assets/images/ruhuna-logo.png.png` is retained only as an unused historical file. It is not referenced by runtime pages and is excluded from the deployment allowlist. The builder removes that specific obsolete file from a previous generated build, without deleting the source file or other unexpected files. Remove any obsolete remote copy manually after uploading the seven changed runtime files; nothing has been uploaded or removed remotely here.
 
-Redistribution permission has not been established for the supplied university logo (`assets/images/ruhuna-logo.png.png`) or the course assignment rubric (`docs/Mini Project Evaluation Rubric - COM.pdf`). Both paths are explicitly excluded in `.gitignore`; neither local file is deleted or changed, and the local application's branding is retained. Keep both excluded until permission to redistribute publicly is confirmed. A fresh clone requires an independently authorized copy of the logo at the same path; obtain the rubric through the course's authorized channel.
+The assignment PDF remains excluded from Git and deployment because redistribution permission has not been established. No replacement campus image or university emblem has been generated.
 
-Ignore rules do not remove files already tracked by Git. Before the first commit, verify the staged file list and confirm that these assets, local credentials, and private exports are absent, while `database/schema.sql` is included. There was no `.git` directory during preparation; no index or history was modified.
+## Verification limits
 
-## Verification of the typography-based redesign
-
-- At the time of the typography redesign, all 10 PHP files passed syntax checks and the then-existing 34 integration checks passed. The later optional-description change passed 58 checks; see `docs/testing.md` for the current results and their verification limits.
-- Homepage and supplied PNG returned HTTP 200; the logo response is `image/png`.
-- HTTP checks confirmed the requested heading and supporting text, and removal of the illustrated card markup.
-- Before/after checksums matched for the existing item/category records, schema, database configuration, shared security/bootstrap code, and create/edit, detail and deletion pages. Integration tests removed their own temporary records.
-- Responsive CSS retains desktop/tablet/mobile breakpoints. Visual review at those sizes, keyboard focus and logo rendering remain manual checks; no browser visual pass is claimed.
+Local HTTP/DOM tests check disclosures, titles, independent project identification, the original SVG mark and absence of crest imagery on homepage/login/registration. Database-backed regression tests run in an isolated local copy that excludes private configuration. These tests do not establish the cause or resolution of Google’s deployed-site security finding. The current Search Console sample URLs, deployed files, host security and any injected/third-party content still need review.

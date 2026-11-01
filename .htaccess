@@ -1,1 +1,6 @@
 Options -Indexes
+
+# Never serve environment files, exports, logs, backups or upload archives.
+<FilesMatch "(?i)^(?:\.env(?:\..*)?|.*\.(?:sql(?:\..*)?|log|bak|backup|old|ini|zip(?:\.zip)?))$">
+    Require all denied
+</FilesMatch>
